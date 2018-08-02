@@ -22,9 +22,18 @@ namespace IncrementBuildNumber
 
         public IEnumerable<string> ProcessAssemblyInfo()
         {
-            foreach (string file in Directory.GetFiles(_workingDirectory, "AssemblyInfo.cs", SearchOption.AllDirectories))
+            foreach (string file in Directory.EnumerateFiles(_workingDirectory, "AssemblyInfo.cs", SearchOption.AllDirectories))
             {
-                string[] lines = File.ReadAllLines(file);
+                string[] lines;
+                try
+                {
+                    lines = File.ReadAllLines(file);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine($"Error reading {file}: {e.Message}");
+                    continue;
+                }
 
                 var collectedVersions = new List<string>();
                 for (var i = 0; i < lines.Length; i++)
@@ -44,15 +53,31 @@ namespace IncrementBuildNumber
                 }
 
                 Console.WriteLine(file);
-                File.WriteAllLines(file, lines, Encoding.UTF8);
+                try
+                {
+                    File.WriteAllLines(file, lines, Encoding.UTF8);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine($"Error writing {file}: {e.Message}");
+                }
             }
         }
 
         public IEnumerable<string> ProcessProjectFiles()
         {
-            foreach (string file in Directory.GetFiles(_workingDirectory, "*.csproj", SearchOption.AllDirectories))
+            foreach (string file in Directory.EnumerateFiles(_workingDirectory, "*.csproj", SearchOption.AllDirectories))
             {
-                XDocument xDoc = XDocument.Load(file, LoadOptions.PreserveWhitespace);
+                XDocument xDoc;
+                try
+                {
+                    xDoc = XDocument.Load(file, LoadOptions.PreserveWhitespace);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine($"Error loading {file}: {e.Message}");
+                    continue;
+                }
 
                 XElement element = xDoc.Descendants("Version").FirstOrDefault();
                 if (element == null)
@@ -66,14 +91,31 @@ namespace IncrementBuildNumber
                 using (XmlWriter writer = XmlWriter.Create(file, GetXmlWriterSettings(hasDeclaration)))
                 {
                     Console.WriteLine(file);
-                    xDoc.WriteTo(writer);
+                    try
+                    {
+                        xDoc.WriteTo(writer);
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine($"Error writing {file}: {e.Message}");
+                    }
                 }
             }
         }
 
         private static string GetNewVersion(string currentVersion, ForceIncrement forceIncrement = ForceIncrement.None)
         {
-            var version = new Version(currentVersion);
+            Version version;
+            try
+            {
+                version = new Version(currentVersion);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error. Could not parse version string {currentVersion}: {e.Message}");
+                Console.WriteLine("Not changing current version.");
+                return currentVersion;
+            }
 
             int major = version.Major + (forceIncrement == ForceIncrement.Major ? 1 : 0);
             int minor = forceIncrement == ForceIncrement.Major ? 0 : version.Minor + (forceIncrement == ForceIncrement.Minor ? 1 : 0);

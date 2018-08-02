@@ -5,6 +5,13 @@ namespace IncrementBuildNumber
 {
     internal class Git
     {
+        public enum Status
+        {
+            Unknown,
+            Clean,
+            Dirty
+        }
+
         public static Status GetStatus(string workingDirectory)
         {
             try
@@ -12,7 +19,7 @@ namespace IncrementBuildNumber
                 Process process = Process.Start(new ProcessStartInfo
                 {
                     FileName = "git",
-                    Arguments = "status --untracked-files=no --porcelain",
+                    Arguments = string.Join(" ", "status", "--untracked-files=no", "--porcelain"),
                     WorkingDirectory = workingDirectory,
                     RedirectStandardOutput = true,
                     CreateNoWindow = true,
@@ -31,13 +38,6 @@ namespace IncrementBuildNumber
                 Console.WriteLine($"Exception: {exception.Message}");
                 return Status.Unknown;
             }
-        }
-
-        public enum Status
-        {
-            Unknown,
-            Clean,
-            Dirty
         }
     }
 }

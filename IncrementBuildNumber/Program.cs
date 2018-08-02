@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 namespace IncrementBuildNumber
@@ -16,6 +17,14 @@ namespace IncrementBuildNumber
 
                 ConsoleHelper.PauseIfRequired();
                 return 0;
+            }
+
+            if (!Directory.EnumerateFiles(option.WorkingDirectory, "*.sln", SearchOption.TopDirectoryOnly).Any())
+            {
+                Console.WriteLine($"Error: directory \"{option.WorkingDirectory}\" does not contain a solution file.");
+
+                ConsoleHelper.PauseIfRequired();
+                return 99;
             }
 
             if (Git.GetStatus(option.WorkingDirectory) == Git.Status.Dirty)
