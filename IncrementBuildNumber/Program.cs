@@ -38,8 +38,9 @@ namespace IncrementBuildNumber
             var processor = new FileProcessor(option.WorkingDirectory, option.ForceIncrement);
             IEnumerable<string> projectVersions = processor.ProcessProjectFiles();
             IEnumerable<string> assemblyVersions = processor.ProcessAssemblyInfo();
+            IEnumerable<string> packageJsonVersions = processor.ProcessPackageJsonInfo();
 
-            string[] newVersions = projectVersions.Concat(assemblyVersions).Distinct().ToArray();
+            string[] newVersions = projectVersions.Concat(assemblyVersions).Concat(packageJsonVersions).Distinct().ToArray();
             int returnValue = ReportVersionInfoAndDetermineReturnValue(newVersions);
 
             ConsoleHelper.PauseIfRequired();
@@ -66,15 +67,15 @@ namespace IncrementBuildNumber
         private static void ShowHelp()
         {
             Console.WriteLine(@"
-Usage: increment-build-number [PATH] [--major | --minor]
+Usage: increment-build-number [PATH] [--major | --minor | --build]
 
   PATH must point to a git repository containing a Visual Studio solution.
 
   Options:
-    --major    Increment the major version number, set minor version number to zero.
-    --minor    Increment the minor version number.
+    --major    Increment the major version number, set revision and minor version number to zero.
+    --minor    Increment the minor version number, set revision number to zero.
+    --build    Increment the revision number.
 
-  The build number is always incremented, even if the above options are set.
   The revision number is not used and will always be zero.");
         }
     }

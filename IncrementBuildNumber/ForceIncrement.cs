@@ -4,6 +4,7 @@
     {
         None,
         Minor,
-        Major
+        Major,
+        Build
     }
 }

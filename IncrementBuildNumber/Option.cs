@@ -26,7 +26,7 @@ namespace IncrementBuildNumber
 
             ForceIncrement forceIncrement = args.Any(s => Regex.IsMatch(s, @"^--?major$", RegexOptions.IgnoreCase))
                 ? ForceIncrement.Major
-                : (args.Any(s => Regex.IsMatch(s, @"^--?minor$", RegexOptions.IgnoreCase)) ? ForceIncrement.Minor : ForceIncrement.None);
+                : (args.Any(s => Regex.IsMatch(s, @"^--?minor$", RegexOptions.IgnoreCase)) ? ForceIncrement.Minor : ForceIncrement.Build);
 
             return new Option(showHelp, workingDirectory, forceIncrement);
         }

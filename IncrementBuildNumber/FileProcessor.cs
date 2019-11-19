@@ -6,6 +6,8 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.Linq;
+using Newtonsoft.Json.Linq;
+using Formatting = Newtonsoft.Json.Formatting;
 
 namespace IncrementBuildNumber
 {
@@ -87,7 +89,7 @@ namespace IncrementBuildNumber
 
                 yield return element.Value = GetNewVersion(element.Value, _forceIncrement);
 
-                bool hasDeclaration = string.IsNullOrWhiteSpace(xDoc.Declaration?.ToString());
+                var hasDeclaration = string.IsNullOrWhiteSpace(xDoc.Declaration?.ToString());
                 using (XmlWriter writer = XmlWriter.Create(file, GetXmlWriterSettings(hasDeclaration)))
                 {
                     Console.WriteLine(file);
@@ -117,11 +119,36 @@ namespace IncrementBuildNumber
                 return currentVersion;
             }
 
-            int major = version.Major + (forceIncrement == ForceIncrement.Major ? 1 : 0);
-            int minor = forceIncrement == ForceIncrement.Major ? 0 : version.Minor + (forceIncrement == ForceIncrement.Minor ? 1 : 0);
-            int build = version.Build + 1;
+            int major;
+            int minor;
+            int build;
+            switch (forceIncrement)
+            {
+                case ForceIncrement.None:
+                    major = version.Major;
+                    minor = version.Minor;
+                    build = version.Build;
+                    break;
+                case ForceIncrement.Minor:
+                    major = version.Major;
+                    minor = version.Minor + 1;
+                    build = 0;
+                    break;
+                case ForceIncrement.Major:
+                    major = version.Major + 1;
+                    minor = 0;
+                    build = 0;
+                    break;
+                case ForceIncrement.Build:
+                    major = version.Major;
+                    minor = version.Minor;
+                    build = version.Build + 1;
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(forceIncrement), forceIncrement, null);
+            }
 
-            return new Version(major, minor, build, 0).ToString();
+            return new Version(major, minor, build, 0).ToString(3);
         }
 
         private static XmlWriterSettings GetXmlWriterSettings(bool omitXmlDeclaration)
@@ -145,6 +172,63 @@ namespace IncrementBuildNumber
                     return newVersion;
                 },
                 RegexOptions.IgnorePatternWhitespace);
+        }
+
+        public IEnumerable<string> ProcessPackageJsonInfo()
+        {
+            foreach (var directory in Directory.EnumerateDirectories(_workingDirectory, "*", SearchOption.TopDirectoryOnly))
+            foreach (var file in Directory.EnumerateFiles(directory, "package.json", SearchOption.TopDirectoryOnly))
+            {
+                string text;
+                try
+                {
+                    text = File.ReadAllText(file);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine($"Error reading {file}: {e.Message}");
+                    continue;
+                }
+
+                JObject obj = JObject.Parse(text);
+
+                if (obj["version"] == null)
+                {
+                    continue;
+                }
+
+                var currentVersion = (string) obj["version"];
+                if (string.IsNullOrEmpty(currentVersion))
+                {
+                    continue;
+                }
+
+                var newVersion = GetNewVersion(currentVersion, _forceIncrement);
+
+                if (currentVersion == newVersion)
+                {
+                    continue;
+                }
+
+                yield return newVersion;
+                obj["version"] = newVersion;
+
+                var contents = obj.ToString(Formatting.Indented);
+                if (!Regex.IsMatch(text, @"\r\n") /* Unix line-endings only */)
+                {
+                    contents = Regex.Replace(obj.ToString(Formatting.Indented), @"\r\n", "\n");
+                }
+
+                Console.WriteLine(file);
+                try
+                {
+                    File.WriteAllText(file, contents, new UTF8Encoding(false));
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine($"Error writing {file}: {e.Message}");
+                }
+            }
         }
     }
 }
