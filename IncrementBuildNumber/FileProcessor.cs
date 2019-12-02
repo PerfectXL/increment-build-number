@@ -24,7 +24,7 @@ namespace IncrementBuildNumber
 
         public IEnumerable<string> ProcessAssemblyInfo()
         {
-            foreach (string file in Directory.EnumerateFiles(_workingDirectory, "AssemblyInfo.cs", SearchOption.AllDirectories))
+            foreach (var file in Directory.EnumerateFiles(_workingDirectory, "AssemblyInfo.cs", SearchOption.AllDirectories))
             {
                 string[] lines;
                 try
@@ -43,13 +43,13 @@ namespace IncrementBuildNumber
                     lines[i] = ReplaceVersionInLine(lines[i], collectedVersions, _forceIncrement);
                 }
 
-                string[] newVersions = collectedVersions.Distinct().ToArray();
+                var newVersions = collectedVersions.Distinct().ToArray();
                 if (!newVersions.Any())
                 {
                     continue;
                 }
 
-                foreach (string version in newVersions)
+                foreach (var version in newVersions)
                 {
                     yield return version;
                 }
@@ -68,7 +68,7 @@ namespace IncrementBuildNumber
 
         public IEnumerable<string> ProcessProjectFiles()
         {
-            foreach (string file in Directory.EnumerateFiles(_workingDirectory, "*.csproj", SearchOption.AllDirectories))
+            foreach (var file in Directory.EnumerateFiles(_workingDirectory, "*.csproj", SearchOption.AllDirectories))
             {
                 XDocument xDoc;
                 try
@@ -129,15 +129,25 @@ namespace IncrementBuildNumber
                     minor = version.Minor;
                     build = version.Build;
                     break;
-                case ForceIncrement.Minor:
+                case ForceIncrement.MinorAndReset:
                     major = version.Major;
                     minor = version.Minor + 1;
                     build = 0;
                     break;
-                case ForceIncrement.Major:
+                case ForceIncrement.MajorAndReset:
                     major = version.Major + 1;
                     minor = 0;
                     build = 0;
+                    break;
+                case ForceIncrement.MinorAndBuild:
+                    major = version.Major;
+                    minor = version.Minor + 1;
+                    build = version.Build + 1;
+                    break;
+                case ForceIncrement.MajorAndBuild:
+                    major = version.Major + 1;
+                    minor = 0;
+                    build = version.Build + 1;
                     break;
                 case ForceIncrement.Build:
                     major = version.Major;
@@ -167,7 +177,7 @@ namespace IncrementBuildNumber
                 pattern,
                 s =>
                 {
-                    string newVersion = GetNewVersion(s.Value, forceIncrement);
+                    var newVersion = GetNewVersion(s.Value, forceIncrement);
                     collectedVersions.Add(newVersion);
                     return newVersion;
                 },

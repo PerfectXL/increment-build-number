@@ -20,7 +20,7 @@ namespace IncrementBuildNumber
         private static bool ConsoleWillBeDestroyedAtTheEnd()
         {
             var processList = new uint[1];
-            uint processCount = GetConsoleProcessList(processList, 1);
+            var processCount = GetConsoleProcessList(processList, 1);
             return processCount == 1;
         }
 

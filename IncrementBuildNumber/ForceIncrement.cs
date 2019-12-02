@@ -3,8 +3,10 @@
     internal enum ForceIncrement
     {
         None,
-        Minor,
-        Major,
+        MinorAndReset,
+        MajorAndReset,
+        MinorAndBuild,
+        MajorAndBuild,
         Build
     }
 }

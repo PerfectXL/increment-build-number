@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
@@ -36,12 +35,12 @@ namespace IncrementBuildNumber
             }
 
             var processor = new FileProcessor(option.WorkingDirectory, option.ForceIncrement);
-            IEnumerable<string> projectVersions = processor.ProcessProjectFiles();
-            IEnumerable<string> assemblyVersions = processor.ProcessAssemblyInfo();
-            IEnumerable<string> packageJsonVersions = processor.ProcessPackageJsonInfo();
+            var projectVersions = processor.ProcessProjectFiles();
+            var assemblyVersions = processor.ProcessAssemblyInfo();
+            var packageJsonVersions = processor.ProcessPackageJsonInfo();
 
-            string[] newVersions = projectVersions.Concat(assemblyVersions).Concat(packageJsonVersions).Distinct().ToArray();
-            int returnValue = ReportVersionInfoAndDetermineReturnValue(newVersions);
+            var newVersions = projectVersions.Concat(assemblyVersions).Concat(packageJsonVersions).Distinct().ToArray();
+            var returnValue = ReportVersionInfoAndDetermineReturnValue(newVersions);
 
             ConsoleHelper.PauseIfRequired();
             return returnValue;
@@ -67,14 +66,17 @@ namespace IncrementBuildNumber
         private static void ShowHelp()
         {
             Console.WriteLine(@"
-Usage: increment-build-number [PATH] [--major | --minor | --build]
+Usage: increment-build-number [PATH] [--major | --minor] [--build]
 
   PATH must point to a git repository containing a Visual Studio solution.
 
   Options:
-    --major    Increment the major version number, set revision and minor version number to zero.
-    --minor    Increment the minor version number, set revision number to zero.
-    --build    Increment the revision number.
+    --major    Increment the major version number, set minor version number to zero.
+    --minor    Increment the minor version number.
+    --build    Increment the build number (default).
+
+  If you specify --major or --minor and omit --build, the build number will be reset to zero.
+  If you use --major or --minor in combination with --build, the build number will be incremented.
 
   The revision number is not used and will always be zero.");
         }
