@@ -5,7 +5,7 @@
 		<AssemblyName>increment-build-number</AssemblyName>
 		<Authors />
 		<Company />
-		<Version>0.0.3</Version>
+		<Version>0.1.0</Version>
 	</PropertyGroup>
 	<ItemGroup>
 		<PackageReference Include="ILRepack.Lib.MSBuild" Version="2.1.7" />
