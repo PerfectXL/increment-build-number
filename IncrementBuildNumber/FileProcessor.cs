@@ -173,21 +173,19 @@ namespace IncrementBuildNumber
             const string lookAhead = @" (?= "" \s* \) \s* \] ) ";
             const string pattern = lookBehind + @" \d+\.\d+\.\d+(\.\d+)? " + lookAhead;
 
-            return Regex.Replace(line,
-                pattern,
-                s =>
-                {
-                    var newVersion = GetNewVersion(s.Value, forceIncrement);
-                    collectedVersions.Add(newVersion);
-                    return newVersion;
-                },
-                RegexOptions.IgnorePatternWhitespace);
+            return Regex.Replace(line, pattern, s =>
+            {
+                var newVersion = GetNewVersion(s.Value, forceIncrement);
+                collectedVersions.Add(newVersion);
+                return newVersion;
+            }, RegexOptions.IgnorePatternWhitespace);
         }
 
         public IEnumerable<string> ProcessPackageJsonInfo()
         {
             foreach (var directory in Directory.EnumerateDirectories(_workingDirectory, "*", SearchOption.TopDirectoryOnly))
-            foreach (var file in Directory.EnumerateFiles(directory, "package.json", SearchOption.TopDirectoryOnly))
+            foreach (var searchPattern in new[] {"package.json", "package-lock.json"})
+            foreach (var file in Directory.EnumerateFiles(directory, searchPattern, SearchOption.TopDirectoryOnly))
             {
                 string text;
                 try
