@@ -223,10 +223,10 @@ namespace IncrementBuildNumber
                 yield return newVersion;
                 obj["version"] = newVersion;
 
-                var contents = obj.ToString(Formatting.Indented);
+                var contents = obj.ToString(Formatting.Indented).TrimEnd() + "\r\n";
                 if (!Regex.IsMatch(text, @"\r\n") /* Unix line-endings only */)
                 {
-                    contents = Regex.Replace(obj.ToString(Formatting.Indented), @"\r\n", "\n");
+                    contents = Regex.Replace(contents, @"\r\n", "\n");
                 }
 
                 Console.WriteLine(file);
